@@ -1,0 +1,93 @@
+======================================================================
+STEP 1: Loading the combined dataset
+======================================================================
+Loaded 20000 patient records, 54 columns.
+
+======================================================================
+STEP 2: Data Preprocessing
+======================================================================
+Missing values found across dataset: 0
+-> No missing values found; no imputation needed.
+Duplicate records found: 0
+All categorical variables (Gender, Address, Education, Occupation, Income, and every symptom) are already numerically coded per the study's data-coding sheet (e.g. Gender: 1=Male, 2=Female), so no additional text-to-number conversion is required.
+
+======================================================================
+STEP 3: Feature Engineering / Selection
+======================================================================
+Using 28 input features (demographics + signs/symptoms only):
+   Age, Gender, Address, Education, Occupation, Income, Paleness, Fatigue, BrittleNails, Dizziness, SOB, PoorSleep, Irritability, HairLoss, DrySkin, Appetite, ColdIntolerance, Headache, Tongue, EarNoise, Tachycardia, Infections, Bruising, RLS, Dysphagia, Pica, BlueSclera, AngularStomatitis
+Lab test columns (24 CBC/Peripheral-Smear parameters) are EXCLUDED from inputs, per the study's aim of diagnosis without requiring a blood test. Outcome (case/control) was generated using the exact same classify_lab_verdict() core-panel rule the apps use to confirm IDA from a real patient's lab report, so training stays in sync with the app's lab-confirmation logic.
+
+======================================================================
+STEP 4: Splitting into Train / Validation / Test sets
+======================================================================
+Training set  : 14000 records (70%) - used to train each model
+Validation set: 3000 records (15%) - used to compare/tune models
+Test set      : 3000 records (15%) - held back, used ONLY for the final report
+Numeric features were standardized (mean=0, std=1) for the SVM and Neural Network candidates, which are sensitive to feature scale. Tree-based models (Decision Tree, Random Forest) use the raw values, since they don't require scaling.
+
+======================================================================
+STEP 5: Model Selection - comparing candidate algorithms
+======================================================================
+  Decision Tree              -> Validation Accuracy: 0.9707 | Validation F1: 0.9700
+  Random Forest              -> Validation Accuracy: 0.9887 | Validation F1: 0.9885
+  Support Vector Machine     -> Validation Accuracy: 0.9950 | Validation F1: 0.9950
+  Neural Network (MLP)       -> Validation Accuracy: 0.9927 | Validation F1: 0.9926
+
+Best performing model on the validation set: Support Vector Machine
+Saved model_comparison.png
+
+======================================================================
+STEP 6: Hyperparameter Tuning for Support Vector Machine
+======================================================================
+Searching over: {'C': [1, 10], 'gamma': ['scale', 'auto']}
+Best hyperparameters found: {'C': 10, 'gamma': 'scale'}
+Best cross-validated F1 during search: 0.9968
+
+======================================================================
+STEP 7: 5-Fold Cross-Validation (robustness check)
+======================================================================
+5-fold CV accuracy scores: [np.float64(0.9965), np.float64(0.9968), np.float64(0.9974), np.float64(0.9965), np.float64(0.995)]
+Mean CV accuracy: 0.9964  (std: 0.0008)
+A low standard deviation across folds indicates the model performs consistently and is not just well-tuned to one particular data split.
+
+======================================================================
+STEP 8: Final Evaluation on the held-out Test set
+======================================================================
+Final model      : Support Vector Machine
+Accuracy         : 0.9967
+Precision (PPV)  : 0.9967
+Recall (Sens.)   : 0.9967
+F1-score         : 0.9967
+AUC-ROC          : 0.9999
+Sensitivity      : 0.9967   (True Positive Rate — % of actual IDA cases correctly identified)
+Specificity      : 0.9967   (True Negative Rate — % of actual non-IDA cases correctly identified)
+PPV              : 0.9967   (Of those predicted IDA, % that truly are IDA)
+NPV              : 0.9967   (Of those predicted non-IDA, % that truly are non-IDA)
+Confusion matrix:
+[[1495    5]
+ [   5 1495]]
+
+              precision    recall  f1-score   support
+
+      No IDA       1.00      1.00      1.00      1500
+         IDA       1.00      1.00      1.00      1500
+
+    accuracy                           1.00      3000
+   macro avg       1.00      1.00      1.00      3000
+weighted avg       1.00      1.00      1.00      3000
+
+Saved clinical_metrics.txt
+Saved roc_curve.png
+
+======================================================================
+STEP 9: Explainability (Feature Importance + SHAP)
+======================================================================
+Selected model does not expose feature_importances_ directly; skipping the basic importance chart (SHAP chart below covers this).
+Computing SHAP values (this explains each prediction symptom-by-symptom)...
+Saved shap_summary.png
+
+======================================================================
+STEP 10: Saving the final model to disk
+======================================================================
+Saved ida_model.joblib, feature_list.joblib, scaler.joblib, model_meta.joblib

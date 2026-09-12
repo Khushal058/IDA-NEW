@@ -1,0 +1,23 @@
+Clinical Evaluation Metrics — Iron Deficiency Anaemia AI Model
+=================================================================
+
+Model used: Support Vector Machine
+
+Accuracy     : 0.9967
+Sensitivity  : 0.9967  (Recall / True Positive Rate)
+Specificity  : 0.9967  (True Negative Rate)
+PPV          : 0.9967  (Precision / Positive Predictive Value)
+NPV          : 0.9967  (Negative Predictive Value)
+F1-score     : 0.9967
+AUC-ROC      : 0.9999
+
+Confusion Matrix (rows=actual, cols=predicted)
+                 Pred: No IDA   Pred: IDA
+Actual: No IDA   1495          5
+Actual: IDA      5             1495
+
+Definitions:
+- Sensitivity (Recall): Of all patients who truly have IDA, what % did the model correctly flag?
+- Specificity: Of all patients who truly do NOT have IDA, what % did the model correctly clear?
+- PPV (Precision): Of all patients the model flagged as IDA, what % actually have it?
+- NPV: Of all patients the model cleared as non-IDA, what % actually don't have it?

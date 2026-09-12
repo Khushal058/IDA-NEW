@@ -1,0 +1,9 @@
+patient_id,Age,Gender,hemoglobin,clinician_assessment,issues,Paleness,Fatigue,SOB,Headache,Dizziness,Infections,Appetite,Pica,ColdIntolerance
+2409200070,51.0,2.0,9.3,,outcome_unparseable:yno,1.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0
+2403280097,66.0,1.0,,IDA Positive (Clinical Judgement + Lab Reports),hb_out_of_range:409gm%,,,,,,,,,
+2402270113,78.0,1.0,10.1,,outcome_unparseable:yno,0.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0
+2407050006,7.0,1.0,,IDA Positive (Clinical Judgement + Lab Reports),hb_out_of_range:71gm%,,,,,,2.0,,,
+2207200011,26.0,1.0,7.8,,outcome_unparseable:year,2.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0
+2108150013,41.0,,7.7,IDA Negative (Clinical Judgement + Lab Reports),gender_unparseable:df,2.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0
+2106250071,,2.0,3.5,IDA Positive (Clinical Judgement + Lab Reports),age_out_of_range:316y,3.0,3.0,3.0,3.0,3.0,2.0,3.0,3.0,3.0
+2109030079,,2.0,9.9,IDA Positive (Clinical Judgement + Lab Reports),age_out_of_range:565y,1.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0

@@ -1,0 +1,6 @@
+# Never upload these — they contain passwords/connection strings
+db_config.txt
+.streamlit/secrets.toml
+patient_records.db
+__pycache__/
+*.pyc
