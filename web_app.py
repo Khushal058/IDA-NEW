@@ -191,6 +191,11 @@ def _clean_db_url(raw):
     url = str(raw).strip().strip('"').strip("'").strip()
     if url.startswith("postgres://"):
         url = "postgresql://" + url[len("postgres://"):]
+    # Force the psycopg2 driver explicitly. Without this, SQLAlchemy can try
+    # the newer 'psycopg' (v3) package, which is not installed (we ship
+    # psycopg2-binary in requirements.txt), causing ModuleNotFoundError.
+    if url.startswith("postgresql://"):
+        url = "postgresql+psycopg2://" + url[len("postgresql://"):]
     return url
 
 @st.cache_resource(show_spinner=False)
