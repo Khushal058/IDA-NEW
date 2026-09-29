@@ -185,20 +185,52 @@ USES_SCALED = model_meta.get("uses_scaled_input", False)
 # ============================================================================
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float
 
-@st.cache_resource
+def _clean_db_url(raw):
+    """Fixes the most common paste mistakes in the connection string:
+    surrounding quotes/spaces/newlines and the old 'postgres://' prefix."""
+    url = str(raw).strip().strip('"').strip("'").strip()
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+    return url
+
+@st.cache_resource(show_spinner=False)
+def _try_cloud_engine():
+    """Connects to the cloud (Supabase) database, retrying a few times because
+    the first connection from Streamlit Cloud can be slow. Failures are NOT
+    cached (Streamlit only caches successful returns), so the next page load
+    simply tries again instead of being stuck on local storage."""
+    import time
+    db_url = _clean_db_url(st.secrets["SUPABASE_DB_URL"])
+    last_err = None
+    for attempt in range(3):
+        try:
+            engine = create_engine(
+                db_url,
+                pool_pre_ping=True,
+                pool_recycle=300,
+                connect_args={
+                    "connect_timeout": 20,
+                    "keepalives": 1,
+                    "keepalives_idle": 30,
+                    "keepalives_interval": 10,
+                    "keepalives_count": 5,
+                },
+            )
+            with engine.connect():
+                pass
+            return engine
+        except Exception as e:
+            last_err = e
+            time.sleep(2 * (attempt + 1))
+    raise last_err
+
 def get_db_engine():
     try:
-        db_url = st.secrets["SUPABASE_DB_URL"]
-        engine = create_engine(db_url, pool_pre_ping=True, connect_args={"connect_timeout": 5})
-        # Actually try to connect now, instead of waiting for it to fail later
-        # deep inside a form submit (which used to crash the whole app with a
-        # raw traceback). If it fails here, fall back to local storage.
-        with engine.connect():
-            pass
-        return engine, True
-    except Exception:
-        engine = create_engine("sqlite:///patient_records.db")
-        return engine, False
+        return _try_cloud_engine(), True
+    except Exception as e:
+        # Remember the real reason so it can be shown under the warning banner.
+        st.session_state["db_error"] = f"{type(e).__name__}: {str(e)[:300]}"
+        return create_engine("sqlite:///patient_records.db"), False
 
 _metadata = MetaData()
 _patient_columns = (
@@ -1003,6 +1035,11 @@ else:
         st.success("☁️ Connected to cloud database — patient records are stored permanently and will survive app restarts.")
     else:
         st.warning("⚠️ No cloud database configured — using local storage only. This data is **not guaranteed to persist** if deployed on Streamlit Cloud. See README to connect a permanent database. Export records regularly using the button below as a backup.")
+        with st.expander("Technical details / retry connection"):
+            st.code(st.session_state.get("db_error", "No SUPABASE_DB_URL found in Secrets, or it could not be read."))
+            if st.button("🔄 Retry cloud connection"):
+                _try_cloud_engine.clear()
+                st.rerun()
 
     tab1, tab2 = st.tabs(["➕ Add New Patient Record", "📄 View / Export Records"])
 
